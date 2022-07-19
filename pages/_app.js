@@ -1,4 +1,5 @@
 import '../styles/globals.css'
+
 import { MoralisProvider } from 'react-moralis'
 import { ArxomProvider } from '../context/ArxomContext'
 

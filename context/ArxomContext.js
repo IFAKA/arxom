@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react"
+import { createContext, useCallback, useEffect, useState } from "react"
 import { useMoralis, useMoralisQuery } from 'react-moralis'
 
 export const ArxomContext = createContext()
@@ -6,6 +6,7 @@ export const ArxomContext = createContext()
 export const ArxomProvider = ({ children }) => {
     const [username, setUsername] = useState('')
     const [nickname, setNickname] = useState('')
+    const [assets, setAssets] = useState([])
 
     const {
         authenticate,
@@ -16,14 +17,11 @@ export const ArxomProvider = ({ children }) => {
         isWeb3Enabled
     } = useMoralis()
 
-    useEffect(() => {
-        ; (async () => {
-            if (isAuthenticated) {
-                const currentUsername = await user?.get('nickname')
-                setUsername(currentUsername)
-            }
-        })()
-    }, [isAuthenticated, user, username])
+    const {
+        data: assetsData,
+        error: assetsDataError,
+        isLoading: assetsDataIsLoading
+    } = useMoralisQuery('assets')
 
     const handleSetUsername = () => {
         user ?
@@ -35,13 +33,40 @@ export const ArxomProvider = ({ children }) => {
             : console.log('No user')
     }
 
+    const getAssets = useCallback(async () => {
+        try {
+            await enableWeb3()
+            setAssets(assetsData)
+        } catch (error) {
+            console.log(error)
+        }
+    }, [assetsData, enableWeb3])
+
+    useEffect(() => {
+        ; (async () => {
+            if (isAuthenticated) {
+                const currentUsername = await user?.get('nickname')
+                setUsername(currentUsername)
+            }
+        })()
+    }, [isAuthenticated, user, username])
+
+    useEffect(() => {
+        ; (async () => {
+            if (isWeb3Enabled) {
+                await getAssets()
+            }
+        })()
+    }, [getAssets, isWeb3Enabled])
+
     return (
         <ArxomContext.Provider value={{
             isAuthenticated,
             nickname,
             setNickname,
             username,
-            handleSetUsername
+            handleSetUsername,
+            assets
         }}>
             {children}
         </ArxomContext.Provider>

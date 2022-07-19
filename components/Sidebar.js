@@ -1,9 +1,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useContext } from 'react'
+import isotype from '../assets/isotype.png'
+import logotype from '../assets/logotype.png'
 import { ConnectButton } from 'web3uikit'
-import isotype from '../assets/arxom-isotype.png'
-import logotype from '../assets/arxom-logotype.png'
 import { FaBox } from 'react-icons/fa'
 import { BsFillPersonFill, BsFillBookmarkFill } from 'react-icons/bs'
 import { AiOutlineHistory } from 'react-icons/ai'
@@ -11,7 +11,7 @@ import { ArxomContext } from '../context/ArxomContext'
 
 const styles = {
   container: `h-full w-[300px] flex flex-col bg-[#fff] static`,
-  profile: ` w-full py-10 flex flex-col justify-center items-center rounded-r-3xl bg-gradient-to-t from-[#FF6A00] to-[#FFD700] mt-[40px] mb-[50px] border-2 border-[#fb9701]`,
+  profile: `shadow-md w-full py-10 flex flex-col justify-center items-center rounded-r-3xl bg-gradient-to-t from-[#FF6A00] to-[#FFD700] mt-[40px] mb-[50px] border-2 border-[#fb9701]`,
   profilePicContainer: `flex rounded-xl items-center justify-center w-full h-full mb-5`,
   profilePic: `rounded-3xl object-cover`,
   welcome: ` text-md mb-2 font-bold text-2xl text-white`,
@@ -33,7 +33,7 @@ export const Sidebar = () => {
     username,
     handleSetUsername
   } = useContext(ArxomContext)
-
+  
   return (
     <div className={styles.container}>
       <div className={styles.profile}>
