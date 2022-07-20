@@ -12,11 +12,11 @@ import { ArxomContext } from '../context/ArxomContext'
 const styles = {
   container: `h-full w-[300px] flex flex-col bg-[#fff] static`,
   profile: `shadow-md w-full py-10 flex flex-col justify-center items-center rounded-r-3xl bg-gradient-to-t from-[#FF6A00] to-[#FFD700] mt-[40px] mb-[50px] border-2 border-[#fb9701]`,
-  profilePicContainer: `flex rounded-xl items-center justify-center w-full h-full mb-5`,
+  profilePicContainer: `flex rounded-xl items-center justify-center w-full h-full mb-3`,
   profilePic: `rounded-3xl object-cover`,
-  welcome: ` text-md mb-2 font-bold text-2xl text-white`,
+  welcome: `text-md mb-4 font-bold text-2xl text-white`,
   walletAddress: `text-xl flex w-full justify-center font-extrabold mb-4`,
-  menu: `flex flex-col w-full h-full px-10 gap-10`,
+  menu: `flex flex-col w-full h-full px-10 gap-8`,
   menuItem: `flex items-center text-lg font-bold cursor-pointer gap-4`,
   logo: `mr-4 flex object-cover`,
   companyName: `text-lg font-bold flex flex-1 pl-10 items-center mt-[20px]`,
@@ -44,8 +44,8 @@ export const Sidebar = () => {
                 src={`https://avatars.dicebear.com/api/pixel-art/${username}.svg`}
                 alt='profile'
                 className={styles.profilePic}
-                height={100}
-                width={100}
+                height={80}
+                width={80}
               />
             </div>
             {!username ? (
@@ -106,7 +106,7 @@ export const Sidebar = () => {
         <Link href='/history'>
           <div className={styles.menuItem}>
             <AiOutlineHistory color="#FF6A00"/>
-            Transaction History
+            History
           </div>
         </Link>
       </div>
