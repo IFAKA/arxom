@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 const BuyModal = ({ close }) => {
     const styles = {
-        container: `h-full w-full flex flex-col `,
+        container: `h-full w-full flex flex-col`,
         closeX: `w-full h-[50px] flex items-center justify-end mb-[20px]`,
         title: `text-3xl font-bold flex flex-1 items-center justify-center mb-[40px]`,
         content: `flex w-full mb-[30px] text-xl justify-center`,
@@ -55,10 +55,10 @@ const BuyModal = ({ close }) => {
                     <div className={styles.closeX}>
                         <IoIosClose
                             onClick={() => {
-                                close()
                                 setAmountDue('')
                                 setTokenAmount('')
                                 setEtherscanLink('')
+                                close()
                             }}
                             fontSize={50}
                             className='cursor-pointer'

@@ -34,6 +34,12 @@ export const ArxomProvider = ({ children }) => {
         isLoading: assetsDataIsLoading
     } = useMoralisQuery('assets')
 
+    const {
+        data: userData,
+        error: userDataError,
+        isLoading: userDataIsLoading
+    } = useMoralisQuery('_User')
+
     const handleSetUsername = () => {
         user ?
             nickname ? (
@@ -42,6 +48,32 @@ export const ArxomProvider = ({ children }) => {
                 setNickname('')
             ) : console.log("Can't set empty nickname")
             : console.log('No user')
+    }
+
+    const buyAsset = async (price, asset) => {
+        try {
+            if (!isAuthenticated) return
+            const options = {
+                type: 'erc20',
+                amount: price,
+                receiver: arxomCoinAddress,
+                contractAddress: arxomCoinAddress
+            }
+            let transaction = await Moralis.transfer(options)
+            const receipt = await transaction.wait()
+
+            if (receipt) {
+                const res = userData[0].add('ownedAsset', {
+                    ...asset,
+                    purchaseDate: Date.now(),
+                    etherscanLink: `https://rinkeby.etherscan.io/tx/${receipt.transactionHash}`
+                })
+                await res.save().then(() => { console.log('You have successfully purchased this assets!') })
+            }
+
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     const getBalance = useCallback(async () => {
@@ -84,7 +116,7 @@ export const ArxomProvider = ({ children }) => {
             params: { amount }
         }
 
-        const transaction = await Moralis.executeFunction(options)
+        let transaction = await Moralis.executeFunction(options)
         const receipt = await transaction.wait(4)
 
         setIsLoading(false)
@@ -138,7 +170,7 @@ export const ArxomProvider = ({ children }) => {
             setIsLoading,
             setEtherscanLink,
             etherscanLink,
-            // buyAsset,
+            buyAsset,
             currentAccount,
             nickname,
             setNickname,
