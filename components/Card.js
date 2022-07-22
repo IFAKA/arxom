@@ -11,7 +11,6 @@ const styles = {
 }
 
 export const Card = ({ item }) => {
-    console.log(item)
     return (
         <div className={styles.cardContainer} >
             <div className={styles.card}>

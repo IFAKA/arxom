@@ -1,6 +1,7 @@
 import React, { useContext } from 'react'
 import { ArxomContext } from '../context/ArxomContext'
 import { Cards } from './Cards'
+import { Header } from './Header'
 
 const styles = {
   container: `h-full w-full flex flex-col mt-[50px] pr-[50px] overflow-hidden`,
@@ -12,8 +13,8 @@ const styles = {
 export const Main = () => {
   return (
     <div className={styles.container}>
-      {/* <Header/>
-      <Featured/> */}
+      <Header />
+      {/* <Featured/> */}
       <Cards />
     </div>
   )

@@ -9,12 +9,12 @@ const styles = {
 }
 
 export const Cards = () => {
-    const {assets} = useContext(ArxomContext)
+    const { assets } = useContext(ArxomContext)
     return (
         <div className={styles.container}>
             <div className={styles.title}>New Release</div>
             <div className={styles.cards}>
-                {assets.map((item) => {
+                {assets?.map((item) => {
                     return <Card key={item.id} item={item.attributes} />
                 })}
             </div>
