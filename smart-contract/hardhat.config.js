@@ -14,7 +14,9 @@ module.exports = {
   networks: {
     rinkeby: {
       url: process.env.NEXT_PUBLIC_RINKEBY_NODE_URL,
-      accounts: {mnemonic:process.env.NEXT_PUBLIC_WALLET_MNEMONIC},
+      accounts: {
+        mnemonic: process.env.NEXT_PUBLIC_WALLET_MNEMONIC
+      },
     },
   }
 }
