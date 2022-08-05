@@ -1,17 +1,17 @@
 import '../styles/globals.css'
 
 import { MoralisProvider } from 'react-moralis'
-import { ArxomProvider } from '../context/ArxomContext'
-import { ModalProvider } from 'react-simple-hook-modal'
+import Layout  from '@components/Layout'
 
 function MyApp({ Component, pageProps }) {
   return (
-    <MoralisProvider serverUrl={process.env.NEXT_PUBLIC_MORALIS_SERVER_URL} appId={process.env.NEXT_PUBLIC_MORALIS_APP_ID} >
-      <ArxomProvider>
-        <ModalProvider>
-          <Component {...pageProps} />
-        </ModalProvider>
-      </ArxomProvider>
+    <MoralisProvider
+      serverUrl={process.env.NEXT_PUBLIC_MORALIS_SERVER_URL}
+      appId={process.env.NEXT_PUBLIC_MORALIS_APP_ID}
+    >
+      <Layout>
+        <Component {...pageProps} />
+      </Layout>
     </MoralisProvider>
   )
 }

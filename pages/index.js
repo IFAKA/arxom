@@ -1,15 +1,14 @@
-import { Main } from "../components/Main"
-import { Sidebar } from "../components/Sidebar"
+import Cards from '@components/Cards'
+import Featured from '@components/Featured'
+import React from 'react'
 
-const styles = {
-  container: 'h-full w-full flex bg-[#fff]'
-}
-
-export default function Home() {
+const Home = () => {
   return (
-    <div className={styles.container}>
-      <Sidebar />
-      <Main />
-    </div>
+    <>
+      <Featured />
+      <Cards />
+    </>
   )
 }
+
+export default Home

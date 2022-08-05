@@ -1,187 +1,63 @@
-import { ethers } from "ethers"
-import { createContext, useCallback, useEffect, useState } from "react"
-import { useMoralis, useMoralisQuery } from 'react-moralis'
+import { createContext, useEffect, useState } from "react"
 import { arxomCoinAddress, arxomAbi } from '../lib/constants'
+import { useMoralis } from 'react-moralis'
+import { useRouter } from "next/router"
 
 export const ArxomContext = createContext()
 
 export const ArxomProvider = ({ children }) => {
-    const [currentAccount, setCurrentAccount] = useState('')
-    const [formattedAccount, setFormattedAccount] = useState('')
-    const [balance, setBalance] = useState('')
-    const [tokenAmount, setTokenAmount] = useState('')
-    const [amountDue, setAmountDue] = useState('')
-    const [isLoading, setIsLoading] = useState(false)
-    const [etherscanLink, setEtherscanLink] = useState('')
-    const [nickname, setNickname] = useState('')
-    const [username, setUsername] = useState('')
-    const [assets, setAssets] = useState([])
-    const [recentTransactions, setRecentTransactions] = useState([])
-    const [ownedItems, setOwnedItems] = useState([])
+  const [term, setTerm] = useState('')
+  const [balance, setBalance] = useState(0)
+  const { Moralis, enableWeb3, isWeb3Enabled, isAuthenticated, user } = useMoralis()
+  const { pathname } = useRouter()
+  const check = isWeb3Enabled && isAuthenticated && user
 
-    const {
-        authenticate,
-        isAuthenticated,
-        enableWeb3,
-        Moralis,
-        user,
-        isWeb3Enabled
-    } = useMoralis()
 
-    const {
-        data: assetsData,
-        error: assetsDataError,
-        isLoading: assetsDataIsLoading
-    } = useMoralisQuery('assets')
-
-    const {
-        data: userData,
-        error: userDataError,
-        isLoading: userDataIsLoading
-    } = useMoralisQuery('_User')
-
-    const handleSetUsername = () => {
-        user ?
-            nickname ? (
-                user.set('nickname', nickname),
-                user.save(),
-                setNickname('')
-            ) : console.log("Can't set empty nickname")
-            : console.log('No user')
+  const updateBalance = async () => {
+    if (check) {
+      const account = await user?.get('ethAddress')
+      const options = {
+        contractAddress: arxomCoinAddress,
+        functionName: 'balanceOf',
+        abi: arxomAbi,
+        params: { account }
+      }
+      const res = await Moralis.executeFunction(options)
+      setBalance(Number(res))
     }
+  }
 
-    const buyAsset = async (price, asset) => {
-        try {
-            if (!isAuthenticated) return
-            const options = {
-                type: 'erc20',
-                amount: price,
-                receiver: arxomCoinAddress,
-                contractAddress: arxomCoinAddress
-            }
-            let transaction = await Moralis.transfer(options)
-            const receipt = await transaction.wait()
 
-            if (receipt) {
-                const res = userData[0].add('ownedAsset', {
-                    ...asset,
-                    purchaseDate: Date.now(),
-                    etherscanLink: `https://rinkeby.etherscan.io/tx/${receipt.transactionHash}`
-                })
-                await res.save().then(() => { console.log('You have successfully purchased this assets!') })
-            }
+  const searchTerm = (e) => setTerm(e.target.value.toLowerCase())
+  const resetSearch = () => setTerm("")
+  const filterTerm = (data) => {
+    return data.filter(item => {
+      if (term == "") return item
+      if (item.attributes && item.attributes.name.toLowerCase().includes(term)) return item
+      if (item.name && item.name.toLowerCase().includes(term)) return item
+    })
+  }
 
-        } catch (error) {
-            console.log(error)
-        }
-    }
 
-    const getBalance = useCallback(async () => {
-        try {
-            if (!isAuthenticated || !currentAccount) {
-                return
-            }
+  useEffect(() => { pathname && resetSearch() }, [pathname])
 
-            const options = {
-                contractAddress: arxomCoinAddress,
-                functionName: 'balanceOf',
-                abi: arxomAbi,
-                params: {
-                    account: currentAccount
-                }
-            }
+  useEffect(() => {
+    (async () => !check && await enableWeb3())()
+    check && updateBalance()
+  }, [check])
 
-            if (isWeb3Enabled) {
-                const response = await Moralis.executeFunction(options)
-                setBalance(response.toString())
-            }
 
-        } catch (error) {
-            console.log(error)
-        }
-    }, [Moralis, currentAccount, isAuthenticated, isWeb3Enabled])
-
-    const buyTokens = async () => {
-        !isAuthenticated && await authenticate()
-
-        const amount = ethers.BigNumber.from(tokenAmount)
-        const price = ethers.BigNumber.from('100000000000000')
-        const calcPrice = amount.mul(price)
-
-        const options = {
-            contractAddress: arxomCoinAddress,
-            functionName: 'mint',
-            abi: arxomAbi,
-            msgValue: calcPrice,
-            params: { amount }
-        }
-
-        let transaction = await Moralis.executeFunction(options)
-        const receipt = await transaction.wait(4)
-
-        setIsLoading(false)
-        setEtherscanLink(`https://rinkeby.etherscan.io/tx/${receipt.transactionHash}`)
-    }
-
-    const getAssets = useCallback(async () => {
-        try {
-            await enableWeb3()
-            setAssets(assetsData)
-        } catch (error) {
-            console.log(error)
-        }
-    }, [assetsData, enableWeb3])
-
-    useEffect(() => {
-        ; (async () => {
-            if (isAuthenticated) {
-                await getBalance()
-                const currentUsername = await user?.get('nickname')
-                setUsername(currentUsername)
-                const account = await user?.get('ethAddress')
-                setCurrentAccount(account)
-            } else {
-                setCurrentAccount('')
-                setBalance('')
-            }
-        })()
-    }, [isWeb3Enabled, isAuthenticated, balance, setBalance, authenticate, currentAccount, setUsername, user, username, getBalance])
-
-    useEffect(() => {
-        ; (async () => {
-            if (isWeb3Enabled) {
-                await getAssets()
-            }
-        })()
-    }, [assetsData, assetsDataIsLoading, isWeb3Enabled, getAssets, setAssets, enableWeb3])
-
-    return (
-        <ArxomContext.Provider value={{
-            formattedAccount,
-            isAuthenticated,
-            buyTokens,
-            getBalance,
-            balance,
-            setTokenAmount,
-            tokenAmount,
-            amountDue,
-            setAmountDue,
-            isLoading,
-            setIsLoading,
-            setEtherscanLink,
-            etherscanLink,
-            buyAsset,
-            currentAccount,
-            nickname,
-            setNickname,
-            username,
-            setUsername,
-            handleSetUsername,
-            assets,
-            recentTransactions,
-            ownedItems,
-        }}>
-            {children}
-        </ArxomContext.Provider>
-    )
+  return (
+    <ArxomContext.Provider value={{
+      check,
+      balance,
+      term,
+      resetSearch,
+      searchTerm,
+      filterTerm,
+      updateBalance
+    }}>
+      {children}
+    </ArxomContext.Provider>
+  )
 }

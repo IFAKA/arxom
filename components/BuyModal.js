@@ -1,113 +1,87 @@
-import React, { useCallback, useContext, useEffect } from 'react'
+import React, { useContext, useState } from 'react'
+import { ethers } from 'ethers'
 import { IoIosClose } from 'react-icons/io'
-import { ArxomContext } from '../context/ArxomContext'
 import { HashLoader } from 'react-spinners'
-import Link from 'next/link'
+import { arxomCoinAddress, arxomAbi } from '../lib/constants'
+import { ArxomContext } from '@context/ArxomContext'
+import { styleOf } from '@styles/styles'
+import { useMoralis } from 'react-moralis'
+
+const initState = {
+  eth: 0.0000.toFixed(4),
+  arx: '',
+  receipt: '',
+  loading: false,
+}
 
 const BuyModal = ({ close }) => {
-    const styles = {
-        container: `h-full w-full flex flex-col`,
-        closeX: `w-full h-[50px] flex items-center justify-end mb-[20px]`,
-        title: `text-3xl font-bold flex flex-1 items-center justify-center mb-[40px]`,
-        content: `flex w-full mb-[30px] text-xl justify-center`,
-        input: `w-[50%] h-[50px] bg-[#f7f6f2] rounded-lg p-[10px] flex mx-auto`,
-        inputBox: `w-full h-full flex items-center justify-center bg-[#f7f6f2] focus:outline-none`,
-        price: `w-full h-full flex justify-center items-center mt-[20px] font-bold text-3xl`,
-        buyBtn: `w-[20%] h-[50px] bg-[#000] mt-[20px] rounded-lg p-[10px] flex mx-auto text-white justify-center items-center cursor-pointer`,
-        loaderContainer: `w-full h-[500px] flex items-center justify-center`,
-        loader: `w-full h-full flex items-center justify-center`,
-        etherscan: `w-full h-full flex items-center justify-center text-green-500 text-2xl mt-[20px] font-bold cursor-pointer`,
-        success: `w-full h-full flex items-center justify-center text-xl mt-[20px] font-bolder`,
+  const { updateBalance } = useContext(ArxomContext)
+  const [tokenState, setTokenState] = useState(initState)
+  const { Moralis } = useMoralis()
+  const { eth, arx, receipt, loading } = tokenState
+
+  const buyTokens = async () => {
+    setTokenState(s => ({ ...s, loading: true }))
+    const amount = ethers.BigNumber.from(arx)
+    const price = amount.mul(ethers.BigNumber.from('100000000000000'))
+
+    const opt = {
+      contractAddress: arxomCoinAddress,
+      functionName: 'mint',
+      abi: arxomAbi,
+      msgValue: price,
+      params: { amount }
     }
 
-    const {
-        buyTokens,
-        amountDue,
-        setAmountDue,
-        tokenAmount,
-        setTokenAmount,
-        isLoading,
-        setIsLoading,
-        etherscanLink,
-        setEtherscanLink,
-    } = useContext(ArxomContext)
+    const tx = await Moralis.executeFunction(opt)
+    const receipt = await tx.wait()
 
-    useEffect(() => {
-        calculatePrice()
-    }, [calculatePrice, tokenAmount])
+    updateBalance()
+    setTokenState(s => ({
+      ...s,
+      loading: false,
+      receipt: `https://rinkeby.etherscan.io/tx/${receipt.transactionHash}`
+    }))
+  }
 
-    const calculatePrice = useCallback(() => {
-        const price = parseFloat(tokenAmount * 0.0001)
-        price = price.toFixed(4)
-        setAmountDue(price)
-    }, [setAmountDue, tokenAmount])
+  const handleTokenAmount = (e) => {
+    const arx = Math.abs(e.target.value)
+    const eth = parseFloat(arx * 0.0001).toFixed(4)
+    setTokenState(s => ({ ...s, arx, eth }))
+  }
 
-    return (
-        <div className={styles.container}>
-            {isLoading ? (
-                <>
-                    <div className={styles.loaderContainer}>
-                        <HashLoader size={80} />
-                    </div>
-                </>
-            ) : (
-                <>
-                    <div className={styles.closeX}>
-                        <IoIosClose
-                            onClick={() => {
-                                setAmountDue('')
-                                setTokenAmount('')
-                                setEtherscanLink('')
-                                close()
-                            }}
-                            fontSize={50}
-                            className='cursor-pointer'
-                        />
-                    </div>
-                    <div className={styles.title}>Buy More Arxom Coins Here!</div>
-                    <div className={styles.content}>
-                        Select how many tokens you would like to buy.
-                    </div>
-                    <div className={styles.input}>
-                        <input
-                            type='text'
-                            placeholder='Amount...'
-                            className={styles.inputBox}
-                            onChange={e => setTokenAmount(e.target.value)}
-                            value={tokenAmount}
-                        />
-                    </div>
-                    <div className={styles.price}>
-                        Total Due:{' '}
-                        {tokenAmount && tokenAmount > 0 ? amountDue + 'ETH' : '0 ETH'}
-                    </div>
-                    <button
-                        className={styles.buyBtn}
-                        disabled={!tokenAmount || tokenAmount < 0}
-                        onClick={() => {
-                            setIsLoading(true)
-                            buyTokens()
-                        }}
-                    >
-                        Buy
-                    </button>
-                    {etherscanLink && (
-                        <>
-                            <div className={styles.success}>
-                                Transaction Sucessful! Check out your receipt for your
-                                transaction below!
-                            </div>
-                            <Link href={`${etherscanLink}`} className={styles.etherscan}>
-                                <a className={styles.etherscan} target='_blank'>
-                                    Transaction Receipt
-                                </a>
-                            </Link>
-                        </>
-                    )}
-                </>
-            )}
+  const resetModalState = () => (setTokenState(initState), close())
+
+  return (
+    loading
+      ? <div className={styleOf.loadingModal}><HashLoader size={80} /></div>
+      :
+      <>
+        <div className={styleOf.between}>
+          <div className={styleOf.name}>Buy Arxom Coins Here!</div>
+          <button onClick={resetModalState}><IoIosClose fontSize={40} /></button>
         </div>
-    )
+
+        <div className={styleOf.description}>Select how many tokens you would like to buy.</div>
+
+        <input className={styleOf.input} placeholder='Amount...' min={0} type='number' value={arx}
+          onChange={handleTokenAmount} />
+
+        <div className={styleOf.price}>Total Due: {eth} ETH</div>
+
+        <button className={styleOf.primarybtn} disabled={arx < 1}
+          onClick={buyTokens}
+        >BUY</button>
+
+        {receipt &&
+          <>
+            <div className={styleOf.description}>Transaction Sucessful! Check out your receipt for your transaction below!</div>
+            <a href={receipt} className={styleOf.link} target='_blank' rel="noreferrer">RECEIPT</a>
+          </>
+        }
+      </>
+  )
 }
+
 
 export default BuyModal
